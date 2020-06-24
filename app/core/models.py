@@ -7,10 +7,9 @@ from django.contrib.auth.models import (
 
 
 class UserManager(BaseUserManager):
-
     def create_user(self, email, password=None, **extra_fields):
         if not email:
-            raise ValueError('Users must have an email address')
+            raise ValueError("Users must have an email address")
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -37,7 +36,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = "email"
 
 
 class Product(models.Model):
@@ -49,24 +48,19 @@ class Product(models.Model):
         return self.title
 
 
-class Accounting(models.Model):
+class Order(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
-
-
-class Order(Accounting):
     is_done = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'Order #{self.pk}'
+        return f"Order #{self.pk}"
 
 
-class Bill(Accounting):
+class Bill(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now=True)
     is_paid = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'Bill for order #{self.order.primary_key}'
+        return f"Bill for order #{self.order.pk}"
