@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from decimal import Decimal
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -130,3 +132,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+DISCOUNT_MONTH_COUNT = 1
+YEAR_DAYS_COUNT = 365
+YEAR_MONTH_COUNT = 12
+DISCOUNT_SUM = Decimal(0.2)  # 20%

@@ -1,4 +1,5 @@
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 
 from .mixins import ShopViewSetMixin
 from .models import Product, Order, Bill
@@ -29,9 +30,12 @@ class OrderViewSet(ShopViewSetMixin):
     permission_classes = (IsAuthenticatedOrReadOnly, HasGroupPermission)
     required_groups = {
          'GET': ['all_staff'],
-         'POST': ['accounter'],
+         'POST': ['all_staff'],
          'PUT': ['all_staff'],
      }
+
+    def delete(self, *args, **kwargs):
+        return Response({'dich': True})
 
 
 class BillViewSet(ShopViewSetMixin):

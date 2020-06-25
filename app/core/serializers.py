@@ -1,16 +1,11 @@
 import datetime
-from decimal import Decimal
 
 from rest_framework import serializers, permissions
 from .models import Product, Bill, Order
-
-
-DISCOUNT_SUM = Decimal(0.2)  # 20%
+from django.conf import settings
 
 
 class ProductSerializer(serializers.ModelSerializer):
-
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     class Meta:
         model = Product
@@ -26,7 +21,6 @@ class ProductSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
     order_date = serializers.DateField(source="date")
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     class Meta:
         model = Order
@@ -45,8 +39,6 @@ class BillSerializer(serializers.ModelSerializer):
     discount = serializers.SerializerMethodField(read_only=True)
     total_price = serializers.SerializerMethodField(read_only=True)
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
     class Meta:
         model = Bill
         fields = (
@@ -59,21 +51,24 @@ class BillSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("id",)
 
-    def is_product_old(self, obj):
-        return (obj.order.product.date + datetime.timedelta(1 * 365 / 12)) \
+    def is_discount_required(self, obj):
+        return (obj.order.product.date + datetime.timedelta(
+            settings.DISCOUNT_MONTH_COUNT *
+            settings.YEAR_DAYS_COUNT /
+            settings.YEAR_MONTH_COUNT)) \
                < obj.order.date
 
-    def make_discount(self, obj):
-        return obj.order.product.price * DISCOUNT_SUM
+    def discount_amount(self, obj):
+        return obj.order.product.price * settings.DISCOUNT_SUM
 
     def get_discount(self, obj):
-        if self.is_product_old(obj):
-            return self.make_discount(obj)
+        if self.is_discount_required(obj):
+            return f"{self.discount_amount(obj):.2f}"
         else:
             return 0
 
     def get_total_price(self, obj):
-        if self.is_product_old(obj):
-            return obj.order.product.price - self.make_discount(obj)
+        if self.is_discount_required(obj):
+            return f"{obj.order.product.price - self.discount_amount(obj):.2f}"
         else:
-            return obj.order.product.price
+            return f"{obj.order.product.price:.2f}"
