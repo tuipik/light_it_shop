@@ -15,12 +15,10 @@ class UserAdmin(BaseUserAdmin):
             _("Permissions"),
             {
                 "fields": (
-                    "is_cashier",
-                    "is_assistant",
-                    "is_accountant",
                     "is_active",
                     "is_staff",
                     "is_superuser",
+                    "groups",
                 )
             },
         ),

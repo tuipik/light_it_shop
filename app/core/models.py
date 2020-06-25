@@ -28,9 +28,6 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
-    is_cashier = models.BooleanField(default=False)
-    is_assistant = models.BooleanField(default=False)
-    is_accountant = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
@@ -50,7 +47,7 @@ class Product(models.Model):
 
 class Order(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    date = models.DateTimeField(auto_now=True)
+    date = models.DateField(auto_now=False, verbose_name='order_date')
     is_done = models.BooleanField(default=False)
 
     def __str__(self):
@@ -59,7 +56,7 @@ class Order(models.Model):
 
 class Bill(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    date = models.DateTimeField(auto_now=True)
+    date = models.DateField(auto_now=True)
     is_paid = models.BooleanField(default=False)
 
     def __str__(self):
