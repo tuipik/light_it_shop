@@ -1,5 +1,4 @@
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.response import Response
 
 from .mixins import ShopViewSetMixin
 from .models import Product, Order, Bill
@@ -15,11 +14,11 @@ class ProductViewSet(ShopViewSetMixin):
 
 
 class OrderFilter(filters.FilterSet):
-    date = filters.DateFromToRangeFilter()
+    creation_date = filters.DateFromToRangeFilter()
 
     class Meta:
         model = Order
-        fields = ['date']
+        fields = ['creation_date']
 
 
 class OrderViewSet(ShopViewSetMixin):
@@ -30,12 +29,9 @@ class OrderViewSet(ShopViewSetMixin):
     permission_classes = (IsAuthenticatedOrReadOnly, HasGroupPermission)
     required_groups = {
          'GET': ['all_staff'],
-         'POST': ['all_staff'],
+         'POST': ['accounter'],
          'PUT': ['all_staff'],
      }
-
-    def delete(self, *args, **kwargs):
-        return Response({'dich': True})
 
 
 class BillViewSet(ShopViewSetMixin):

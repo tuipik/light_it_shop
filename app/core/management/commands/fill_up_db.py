@@ -1,31 +1,28 @@
 from django.contrib.auth.management.commands import createsuperuser
 
-from random import randint
-from core.models import Post, Comment
+from core.models import Product, Order, Bill
 
 
 class Command(createsuperuser.Command):
     help = "Create a superuser and fill up db with test data"
 
-    def fill_up_db(self, user):
+    def fill_up_db(self):
         for i in range(10):
-            post = Post.objects.create(
-                title=f"{randint(100, 1000)} Lorem ipsum dolor sit amet",
-                link=f"http://{randint(100, 1000)}_test_url.com",
-                author=user,
+            product = Product.objects.create(
+                title=f"Sample Product {i}",
+                price=1000+i
             )
-            Comment.objects.create(
-                author=user,
-                content="Lorem ipsum dolor sit amet, consectetur adipiscing, "
-                "sed do eiumod tempor incididunt ut bore dolore magna aliqua.",
-                post=post,
+            order = Order.objects.create(
+                product=product,
+            )
+            bill = Bill.objects.create(
+                order=order
             )
 
     def handle(self, *args, **options):
         user_data = {
-            "username": "test_user",
+            "email": "test1@testemail.com",
             "password": "test_pass",
-            "email": "test@testemail.com",
         }
 
         user = self.UserModel._default_manager.create_superuser(**user_data)

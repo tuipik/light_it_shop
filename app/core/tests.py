@@ -1,4 +1,5 @@
 import datetime
+from freezegun import freeze_time
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
@@ -15,10 +16,11 @@ ORDERS_URL = reverse("core:orders-list")
 BILLS_URL = reverse("core:bills-list")
 
 
-def sample_user(
-        email="test@testemail.com",
-        password="testpass"
-):
+def detail_url(reversed_url, id):
+    return reverse(reversed_url, args=[id])
+
+
+def sample_user(email="test@testemail.com", password="testpass"):
     return get_user_model().objects.create_user(email, password)
 
 
@@ -34,10 +36,7 @@ def create_product(**params):
 
 def create_order(**params):
     product = create_product()
-    defaults = {
-        "product": product,
-        "date": datetime.date.today(),
-    }
+    defaults = {"product": product}
     defaults.update(params)
 
     return Order.objects.create(**defaults)
@@ -64,7 +63,6 @@ class UserTests(TestCase):
 
 
 class ShopApiTests(TestCase):
-
     def setUp(self):
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
@@ -96,7 +94,7 @@ class ShopApiTests(TestCase):
         self.assertEqual(res.data, serializer.data)
 
     def test_retrieve_orders(self):
-        self.add_user_to_permission_group('all_staff')
+        self.add_user_to_permission_group("all_staff")
         create_order()
 
         res = self.client.get(ORDERS_URL)
@@ -107,7 +105,7 @@ class ShopApiTests(TestCase):
         self.assertEqual(res.data, serializer.data)
 
     def test_retrieve_bills(self):
-        self.add_user_to_permission_group('accounter')
+        self.add_user_to_permission_group("accounter")
         order = create_order()
         create_bill(order)
 
@@ -119,14 +117,59 @@ class ShopApiTests(TestCase):
         self.assertEqual(res.data, serializer.data)
 
     def test_discount_added(self):
-        self.add_user_to_permission_group('accounter')
+        self.add_user_to_permission_group("accounter")
         PRICE = 15142
         DISCIUNT = 3028.4
         SUM_W_DISCOUNT = 12113.6
         product = create_product(price=PRICE)
-        order = create_order(product=product,
-                             date=datetime.date.today()+datetime.timedelta(31))
+        with freeze_time(datetime.date.today() + datetime.timedelta(31)):
+            order = create_order(product=product,)
         create_bill(order)
         res = self.client.get(BILLS_URL)
-        self.assertEqual(float(res.data[0]['discount']), DISCIUNT)
-        self.assertEqual(float(res.data[0]['total_price']), SUM_W_DISCOUNT)
+        self.assertEqual(float(res.data[0]["discount"]), DISCIUNT)
+        self.assertEqual(float(res.data[0]["total_price"]), SUM_W_DISCOUNT)
+
+    def test_bills_cant_see_and_modify_with_all_staff_permission(self):
+        self.add_user_to_permission_group("all_staff")
+        order = create_order()
+        create_bill(order)
+
+        res = self.client.get(BILLS_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_can_modify_order_with_all_stuff_permission(self):
+        self.add_user_to_permission_group("all_staff")
+        order = create_order()
+        url = f"{ORDERS_URL}{order.id}/"
+
+        res = self.client.put(url, {"is_done": True})
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertTrue(res.data["is_done"])
+
+    def test_filter_orders_by_creation_date(self):
+        """
+        Test filering by date.
+        Creates 6 orders  with different dates, then filters
+        from the second one to one before the last
+        Result of filtering should be 4
+        """
+        self.add_user_to_permission_group("all_staff")
+        order_dates_count = 6
+        filtered_orders_count = 4
+        dates_list = [
+            datetime.date.today() + datetime.timedelta(num)
+            for num in range(order_dates_count)
+        ]
+        for date in dates_list:
+            with freeze_time(date):
+                create_order()
+
+        res = self.client.get(
+            f"{ORDERS_URL}?creation_date_after={dates_list[1]}"
+            f"&creation_date_before={dates_list[-2]}"
+        )
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), filtered_orders_count)

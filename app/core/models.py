@@ -36,27 +36,31 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "email"
 
 
-class Product(models.Model):
+class DateMixin(models.Model):
+    creation_date = models.DateField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class Product(DateMixin):
     title = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=8, decimal_places=2)
-    date = models.DateField(auto_now=True)
 
     def __str__(self):
         return self.title
 
 
-class Order(models.Model):
+class Order(DateMixin):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    date = models.DateField(auto_now=False, verbose_name='order_date')
     is_done = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Order #{self.pk}"
 
 
-class Bill(models.Model):
+class Bill(DateMixin):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    date = models.DateField(auto_now=True)
     is_paid = models.BooleanField(default=False)
 
     def __str__(self):
