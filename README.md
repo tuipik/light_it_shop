@@ -44,3 +44,7 @@ bills list: `http://0.0.0.0:8000/api/v1/bills/`
 
 bill detail: `http://0.0.0.0:8000/api/v1/bills/1/`
 
+---
+**Postman Collection:**
+
+`https://www.postman.com/collections/f7bab853c7f89710b3e0`
