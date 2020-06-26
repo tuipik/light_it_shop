@@ -10,7 +10,14 @@ from django_filters import rest_framework as filters
 class ProductViewSet(ShopViewSetMixin):
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, HasGroupPermission)
+    required_groups = {
+         'GET': ['all_staff'],
+         'POST': ['accounter'],
+         'PUT': ['accounter'],
+         'PATCH': ['accounter'],
+         'DELETE': ['accounter'],
+     }
 
 
 class OrderFilter(filters.FilterSet):
@@ -31,7 +38,9 @@ class OrderViewSet(ShopViewSetMixin):
          'GET': ['all_staff'],
          'POST': ['accounter'],
          'PUT': ['all_staff'],
-     }
+         'PATCH': ['all_staff'],
+         'DELETE': ['accounter'],
+    }
 
 
 class BillViewSet(ShopViewSetMixin):
@@ -42,4 +51,6 @@ class BillViewSet(ShopViewSetMixin):
          'GET': ['accounter'],
          'POST': ['accounter'],
          'PUT': ['accounter'],
-     }
+         'PATCH': ['accounter'],
+         'DELETE': ['accounter'],
+    }

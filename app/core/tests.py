@@ -71,18 +71,18 @@ class ShopApiTests(TestCase):
         self.client.force_authenticate(self.user)
 
         # Group setup
-        group_name = "accounter"
-        self.group = Group(name=group_name)
-        self.group.save()
-        group_name = "all_staff"
-        self.group = Group(name=group_name)
-        self.group.save()
+        group_names = ["accounter", "all_staff"]
+        for name in group_names:
+            group = Group(name=name)
+            group.save()
 
     def add_user_to_permission_group(self, group_name):
-        group = Group.objects.get(name=group_name)
-        self.user.groups.add(group)
+        for name in group_name:
+            group = Group.objects.get(name=name)
+            self.user.groups.add(group)
 
     def test_retrieve_products(self):
+        self.add_user_to_permission_group(["accounter", "all_staff"])
         create_product()
         create_product()
 
@@ -94,7 +94,7 @@ class ShopApiTests(TestCase):
         self.assertEqual(res.data, serializer.data)
 
     def test_retrieve_orders(self):
-        self.add_user_to_permission_group("all_staff")
+        self.add_user_to_permission_group(["all_staff"])
         create_order()
 
         res = self.client.get(ORDERS_URL)
@@ -105,7 +105,7 @@ class ShopApiTests(TestCase):
         self.assertEqual(res.data, serializer.data)
 
     def test_retrieve_bills(self):
-        self.add_user_to_permission_group("accounter")
+        self.add_user_to_permission_group(["accounter", "all_staff"])
         order = create_order()
         create_bill(order)
 
@@ -117,7 +117,7 @@ class ShopApiTests(TestCase):
         self.assertEqual(res.data, serializer.data)
 
     def test_discount_added(self):
-        self.add_user_to_permission_group("accounter")
+        self.add_user_to_permission_group(["accounter", "all_staff"])
         PRICE = 15142
         DISCIUNT = 3028.4
         SUM_W_DISCOUNT = 12113.6
@@ -130,7 +130,7 @@ class ShopApiTests(TestCase):
         self.assertEqual(float(res.data[0]["total_price"]), SUM_W_DISCOUNT)
 
     def test_bills_cant_see_and_modify_with_all_staff_permission(self):
-        self.add_user_to_permission_group("all_staff")
+        self.add_user_to_permission_group(["all_staff"])
         order = create_order()
         create_bill(order)
 
@@ -139,7 +139,7 @@ class ShopApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_can_modify_order_with_all_stuff_permission(self):
-        self.add_user_to_permission_group("all_staff")
+        self.add_user_to_permission_group(["all_staff"])
         order = create_order()
         url = f"{ORDERS_URL}{order.id}/"
 
@@ -155,7 +155,7 @@ class ShopApiTests(TestCase):
         from the second one to one before the last
         Result of filtering should be 4
         """
-        self.add_user_to_permission_group("all_staff")
+        self.add_user_to_permission_group(["all_staff"])
         order_dates_count = 6
         filtered_orders_count = 4
         dates_list = [
