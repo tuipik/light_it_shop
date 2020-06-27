@@ -20,12 +20,14 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
+    product_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Order
         fields = (
             "id",
             "product",
+            "product_id",
             "creation_date",
             "is_done",
         )
@@ -34,6 +36,8 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class BillSerializer(serializers.ModelSerializer):
     order = OrderSerializer(read_only=True)
+    order_id = serializers.IntegerField(write_only=True)
+
     discount = serializers.SerializerMethodField(read_only=True)
     total_price = serializers.SerializerMethodField(read_only=True)
 
@@ -42,6 +46,7 @@ class BillSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "order",
+            "order_id",
             "discount",
             "total_price",
             "creation_date",

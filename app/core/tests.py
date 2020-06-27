@@ -143,7 +143,7 @@ class ShopApiTests(TestCase):
         order = create_order()
         url = f"{ORDERS_URL}{order.id}/"
 
-        res = self.client.put(url, {"is_done": True})
+        res = self.client.patch(url, {"is_done": True})
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertTrue(res.data["is_done"])
